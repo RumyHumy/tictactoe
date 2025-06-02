@@ -78,14 +78,14 @@
 	<script>
 		var isX_status = true;
 		const boardElement = document.getElementById('board');
-		function markCell(e, isX) {
-				sign = isX ? 'x' : 'o';
+		function markCell(e, t) {
+				sign = ' xo'[t];
 				e.target.textContent = sign.toUpperCase();
 				e.target.style.color = `var(--col-${sign})`
 		}
 		document.getElementById('board').addEventListener('click', (e) => {
 			if (e.target.classList.contains('cell') && !e.target.textContent) {
-				markCell(e, isX_status);
+				markCell(e, isX_status ? 1 : 2);
 				isX_status = !isX_status;
 			}
 		});
