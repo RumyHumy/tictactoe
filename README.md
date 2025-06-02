@@ -1,5 +1,5 @@
-# Microlist
-Server for mini http website with list of items that everyone can connect to and change. Microhttpd test
+# TicTacToe
+Simple TicTacToe, that works over LAN
 
 # Dependencies
 - https://github.com/cesanta/mongoose
