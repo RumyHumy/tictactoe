@@ -68,7 +68,7 @@
 	<div class="container">
 		<div id="info">
 			<p>Status: <i><span id="status">Pending...</span></i></p>
-			<p>👀: <i><span id="spectators">Pending...</span></i></p>
+			<!--<p>👀: <i><span id="spectators">Pending...</span></i></p>-->
 		</div>
 		<div id="board">
 			<div id="cell0" class="cell no-select"></div>
@@ -112,6 +112,13 @@
 				case 'o':
 					statusElement.textContent = `${event.data[0].toUpperCase()}'s turn...`;
 					break;
+				case 'X':
+				case 'O':
+					statusElement.textContent = `${event.data[0]} is the winner!!!`;
+					break;
+				case 'd':
+					statusElement.textContent = "Player disconnected... Waiting...";
+					break;
 				case 'c':
 					statusElement.textContent = "Waiting for players...";
 					for (var i = 0; i < 9; i++)
@@ -121,10 +128,6 @@
 					for (var i = 0; i < 9; i++) {
 						MarkCell(i, parseInt(event.data[i+1]));
 					}
-					break;
-				case 'X':
-				case 'O':
-					statusElement.textContent = `${event.data[0]} is the winner!!!`;
 					break;
 				default:
 					break;
