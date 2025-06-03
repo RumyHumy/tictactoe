@@ -78,14 +78,10 @@
 	<script>
 		// W E B S O C K E T S
 		const ws = new WebSocket(`ws://${location.host}/ws`);
-		ws.onopen = () => {
-			alert('WS: open');
-		};
+		ws.onopen = () => { console.log('WS: open'); };
 		ws.onmessage = (event) => {
 			console.log(`WS: '${event.data}'`);
     };
-		alert(ws);
-		ws.send('Hello Server');
 		// E L E M E N T S
 		const boardElement = document.getElementById('board');
 		function markCell(e, t) {
@@ -96,7 +92,7 @@
 		document.getElementById('board').addEventListener('click', (e) => {
 			if (e.target.classList.contains('cell')) {
 				//markCell(e, isX_status ? 1 : 2);
-				// TODO: Send message to server
+				ws.send(e.target.id.replace('cell', ''))
 			}
 		});
 	</script>
