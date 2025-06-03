@@ -80,17 +80,19 @@
 		const boardElement = document.getElementById('board');
 		const statusElement = document.getElementById('status');
 		// F U N C
-		function markCell(e, t) {
+		function MarkCell(i, t) {
+			e = boardElement.children[i];
 			sign = ' xo'[t];
-			e.target.textContent = sign.toUpperCase();
-			e.target.style.color = `var(--col-${sign})`
+			e.textContent = sign.toUpperCase();
+			e.style.color = `var(--col-${sign})`
 		}
 		document.getElementById('board').addEventListener('click', (e) => {
 			if (e.target.classList.contains('cell')) {
-				//markCell(e, isX_status ? 1 : 2);
 				ws.send(e.target.id.replace('cell', ''))
 			}
 		});
+		MarkCell(1, 1);
+		MarkCell(2, 2);
 		// W E B S O C K E T S
 		const ws = new WebSocket(`ws://${location.host}/ws`);
 		ws.onopen = () => { console.log('WS: open'); };
@@ -102,6 +104,11 @@
 				case 'x':
 				case 'o':
 					statusElement.textContent = `${event.data[0].toUpperCase()}'s turn...`;
+					break;
+				case 'c':
+					statusElement.textContent = "Waiting for players...";
+					for (var i = 0; i < 9; i++)
+						MarkCell(i, 0);
 					break;
 				default:
 					break;
