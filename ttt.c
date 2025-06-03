@@ -24,6 +24,7 @@ int w_index[8][3] = {
 // 'c' - clear board 
 // 'x'/'o' - who's turn
 // 'X'/'O' - somebody won
+// 't' - tie
 // 'b100020000' - board update
 
 void send_all(struct mg_mgr *mgr, char* buf, size_t len) {
@@ -72,15 +73,16 @@ int get_board_index(char ch) {
 	return (ch >= '0' && ch <= '8') ? ch-'0'+1 : 0;
 }
 
-// -1, 0, 1, 2 - error, good, Xs won, Os won
+// -1, 0, 1, 2, 3 - error, good, Xs won, Os won, tie
 char board_put(int i, char p) {
 	if (turn%2 != p-1)
 		return -1;
 	if (board[i] != '0')
 		return -1;
 	board[i] = p+'0';
+	char flag = 1;
 	for (int j = 0; j < 8; j++) {
-		char flag = 1;
+		flag = 1;
 		printf("board '%c', ", board[w_index[j][0]]);
 		printf("p '%d'\n", p);
 		flag &= board[w_index[j][0]]-'0' == p;
@@ -89,6 +91,13 @@ char board_put(int i, char p) {
 		if (flag)
 			return p;
 	}
+	int j = 1;
+	for (j = 1; j < 9; j++) {
+		if (board[j] == '0')
+			break;
+	}
+	if (j == 9)
+		return 3;
 	turn++;
 	return 0;
 }
@@ -122,6 +131,11 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 			send_all(c->mgr, board, BOARD_SIZE);
 			if (result == p) {
 				send_all(c->mgr, (p == 1 ? "X" : "O"), 1);
+				board_clear();
+				turn = -1;
+				return;
+			} else if (result == 3) {
+				send_all(c->mgr, "t", 1);
 				board_clear();
 				turn = -1;
 				return;
