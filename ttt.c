@@ -3,17 +3,25 @@
 // H A N D L E R S
 
 void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm) {
-	//if (mg_strcmp(hm->uri, mg_str("/add")) == 0) {
-	//	return;
-	//}
+	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
+		mg_ws_upgrade(c, hm, NULL);
+		return;
+	}
 	struct mg_http_serve_opts opts = { .root_dir = "./web" };
 	mg_http_serve_dir(c, hm, &opts);
 }
 
 void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
-	if (ev == MG_EV_HTTP_MSG) {
-		struct mg_http_message* hm = (struct mg_http_message*)ev_data;
-		ev_handle_http(c, ev, hm);
+	switch (ev) {
+		case MG_EV_HTTP_MSG:
+			struct mg_http_message* hm = (struct mg_http_message*)ev_data;
+			ev_handle_http(c, ev, hm);
+			break;
+		case MG_EV_WS_MSG:
+			struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
+			printf("WS: '%.*s'\n", (int)wm->data.len, wm->data.buf);
+			mg_ws_send(c, wm->data.buf, wm->data.len, WEBSOCKET_OP_TEXT);
+			break;
 	}
 }
 

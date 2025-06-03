@@ -76,17 +76,27 @@
 		</div>
 	</div>
 	<script>
-		var isX_status = true;
+		// W E B S O C K E T S
+		const ws = new WebSocket(`ws://${location.host}/ws`);
+		ws.onopen = () => {
+			alert('WS: open');
+		};
+		ws.onmessage = (event) => {
+			console.log(`WS: '${event.data}'`);
+    };
+		alert(ws);
+		ws.send('Hello Server');
+		// E L E M E N T S
 		const boardElement = document.getElementById('board');
 		function markCell(e, t) {
-				sign = ' xo'[t];
-				e.target.textContent = sign.toUpperCase();
-				e.target.style.color = `var(--col-${sign})`
+			sign = ' xo'[t];
+			e.target.textContent = sign.toUpperCase();
+			e.target.style.color = `var(--col-${sign})`
 		}
 		document.getElementById('board').addEventListener('click', (e) => {
-			if (e.target.classList.contains('cell') && !e.target.textContent) {
-				markCell(e, isX_status ? 1 : 2);
-				isX_status = !isX_status;
+			if (e.target.classList.contains('cell')) {
+				//markCell(e, isX_status ? 1 : 2);
+				// TODO: Send message to server
 			}
 		});
 	</script>
