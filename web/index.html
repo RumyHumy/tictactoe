@@ -90,6 +90,8 @@
 		function MarkCell(i, t) {
 			e = boardElement.children[i];
 			sign = ' xo'[t];
+			if (e.textContent == sign)
+				return;
 			e.textContent = sign.toUpperCase();
 			e.style.color = `var(--col-${sign})`
 		}
@@ -115,6 +117,10 @@
 					for (var i = 0; i < 9; i++)
 						MarkCell(i, 0);
 					break;
+				case 'b':
+					for (var i = 0; i < 9; i++) {
+						MarkCell(i, parseInt(event.data[i+1]));
+					}
 				default:
 					break;
 			}
