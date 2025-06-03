@@ -69,12 +69,12 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 			if (pl1 && !poll_check_conn(pl1)) {
 				pl1 = NULL;
 				printf("WS: Player 1 disconnected\n");
-				// TODO: Clear board
+				send_all(c->mgr, "c", 1);
 			}
 			if (pl2 && !poll_check_conn(pl2)) {
 				pl2 = NULL;
 				printf("WS: Player 2 disconnected\n");
-				// TODO: Clear board
+				send_all(c->mgr, "c", 1);
 			}
 			if (pl2 && !pl1) {
 				pl1 = pl2;
