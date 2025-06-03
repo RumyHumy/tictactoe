@@ -7,6 +7,11 @@ struct mg_connection* pl2 = NULL; // player2
 #define BOARD_SIZE 11
 char board[BOARD_SIZE] = "b000000000";
 int turn = -1; // -1 - if game is stopped
+int w_index[8][3] = {
+	{ 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 }, // Horizontal
+	{ 1, 4, 7 }, { 2, 5, 8 }, { 3, 6, 9 }, // Vertical
+	{ 1, 5, 9 }, { 3, 5, 7 } // Diagonal
+};
 
 // H A N D L E R S
 
@@ -44,6 +49,7 @@ void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm)
 				printf("WS: Game started\n");
 				send_all(c->mgr, "s", 1);
 				send_all(c->mgr, "x", 1);
+				send_all(c->mgr, board, BOARD_SIZE);
 				turn = 0;
 			}
 		}
@@ -73,6 +79,16 @@ char board_put(int i, char p) {
 	if (board[i] != '0')
 		return -1;
 	board[i] = p+'0';
+	for (int j = 0; j < 8; j++) {
+		char flag = 1;
+		printf("board '%c', ", board[w_index[j][0]]);
+		printf("p '%d'\n", p);
+		flag &= board[w_index[j][0]]-'0' == p;
+		flag &= board[w_index[j][1]]-'0' == p;
+		flag &= board[w_index[j][2]]-'0' == p;
+		if (flag)
+			return p;
+	}
 	turn++;
 	return 0;
 }
@@ -97,7 +113,13 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 				printf("Illegal move from player %d\n", p);
 				return;
 			}
+			send_all(c->mgr, (p == 1 ? "o" : "x"), 1);
 			send_all(c->mgr, board, BOARD_SIZE);
+			if (result == p) {
+				send_all(c->mgr, (p == 1 ? "X" : "O"), 1);
+				turn = -1;
+				return;
+			}
 			break;
 		case MG_EV_POLL:
 			if (pl1 && !poll_check_conn(pl1)) {
