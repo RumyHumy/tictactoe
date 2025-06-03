@@ -1,14 +1,49 @@
 #include "mongoose.h"
 
+// V A R I A B L E S
+
+struct mg_connection* pl1 = NULL; // player1
+struct mg_connection* pl2 = NULL; // player2
+
 // H A N D L E R S
 
+//void check_conns() {
+//	if (pl2 && !is_conn_alive(pl2)) {
+//		pl1 = pl2;
+//		pl2 = NULL;
+//		printf("WS: Player 2 disconnected\n");
+//		// TODO: Send fail to spectators
+//	}
+//	if (pl1 && !is_conn_alive(pl1)) {
+//		pl1 = NULL;
+//		printf("WS: Player 1 disconnected\n");
+//		// TODO: Send fail to spectators
+//	}
+//}
+
 void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm) {
+	//check_conns();
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
 		mg_ws_upgrade(c, hm, NULL);
+		if (pl1 == NULL) {
+			pl1 = c;
+			printf("WS: Player 1 connected\n");
+		} else if (pl2 == NULL) {
+			pl2 = c;
+			printf("WS: Player 2 connected\n");
+		}
 		return;
 	}
 	struct mg_http_serve_opts opts = { .root_dir = "./web" };
 	mg_http_serve_dir(c, hm, &opts);
+}
+
+char poll_check_conn(struct mg_connection* c) {
+	if (c == NULL)
+		return 0;
+	if (!c->is_websocket)
+		return 0;
+	return !c->is_closing && !c->is_draining;
 }
 
 void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
@@ -21,6 +56,22 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 			struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
 			printf("WS: '%.*s'\n", (int)wm->data.len, wm->data.buf);
 			mg_ws_send(c, wm->data.buf, wm->data.len, WEBSOCKET_OP_TEXT);
+			break;
+		case MG_EV_POLL:
+			if (pl1 && !poll_check_conn(pl1)) {
+				pl1 = NULL;
+				printf("WS: Player 1 disconnected\n");
+				// TODO: Clear board
+			}
+			if (pl2 && !poll_check_conn(pl2)) {
+				pl2 = NULL;
+				printf("WS: Player 2 disconnected\n");
+				// TODO: Clear board
+			}
+			if (pl2 && !pl1) {
+				pl1 = pl2;
+				printf("WS: pl2 -> pl1\n");
+			}
 			break;
 	}
 }
