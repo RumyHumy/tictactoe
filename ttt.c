@@ -10,7 +10,10 @@ struct mg_connection* pl2 = NULL; // player2
 // Messages from server:
 
 // 's' - game started
+// 'w' - waiting for players
+// 'c' - clear board 
 // 'x'/'o' - who's turn
+// 'X'/'O' - somebody won
 
 void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm) {
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
