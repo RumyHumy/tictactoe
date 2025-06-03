@@ -15,6 +15,16 @@ struct mg_connection* pl2 = NULL; // player2
 // 'x'/'o' - who's turn
 // 'X'/'O' - somebody won
 
+void send_all(struct mg_mgr *mgr, char* buf, size_t len) {
+	printf("Sending all: '%.*s'\n", len, buf);
+	struct mg_connection *c;
+	for (c = mgr->conns; c != NULL; c = c->next) {
+		if (c->is_websocket) {
+			mg_ws_send(c, buf, len, WEBSOCKET_OP_TEXT);
+		}
+	}
+}
+
 void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm) {
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
 		mg_ws_upgrade(c, hm, NULL);
@@ -26,10 +36,8 @@ void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm)
 			printf("WS: Player 2 connected\n");
 			if (pl1 && pl2) {
 				printf("WS: Game started\n");
-				mg_ws_send(pl1, "s", 1, WEBSOCKET_OP_TEXT);
-				mg_ws_send(pl2, "s", 1, WEBSOCKET_OP_TEXT);
-				mg_ws_send(pl1, "x", 1, WEBSOCKET_OP_TEXT);
-				mg_ws_send(pl2, "x", 1, WEBSOCKET_OP_TEXT);
+				send_all(c->mgr, "s", 1);
+				send_all(c->mgr, "x", 1);
 			}
 		}
 		return;
