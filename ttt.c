@@ -7,8 +7,12 @@ struct mg_connection* pl2 = NULL; // player2
 
 // H A N D L E R S
 
+// Messages from server:
+
+// 's' - game started
+// 'x'/'o' - who's turn
+
 void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm) {
-	//check_conns();
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
 		mg_ws_upgrade(c, hm, NULL);
 		if (pl1 == NULL) {
@@ -17,6 +21,13 @@ void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm)
 		} else if (pl2 == NULL) {
 			pl2 = c;
 			printf("WS: Player 2 connected\n");
+			if (pl1 && pl2) {
+				printf("WS: Game started\n");
+				mg_ws_send(pl1, "s", 1, WEBSOCKET_OP_TEXT);
+				mg_ws_send(pl2, "s", 1, WEBSOCKET_OP_TEXT);
+				mg_ws_send(pl1, "x", 1, WEBSOCKET_OP_TEXT);
+				mg_ws_send(pl2, "x", 1, WEBSOCKET_OP_TEXT);
+			}
 		}
 		return;
 	}
