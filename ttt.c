@@ -31,12 +31,13 @@ void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm)
 		if (pl1 == NULL) {
 			pl1 = c;
 			printf("WS: Player 1 connected\n");
+			send_all(c->mgr, "c", 1);
 		} else if (pl2 == NULL) {
 			pl2 = c;
 			printf("WS: Player 2 connected\n");
+			send_all(c->mgr, "c", 1);
 			if (pl1 && pl2) {
 				printf("WS: Game started\n");
-				send_all(c->mgr, "c", 1);
 				send_all(c->mgr, "s", 1);
 				send_all(c->mgr, "x", 1);
 			}
