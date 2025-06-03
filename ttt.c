@@ -7,20 +7,6 @@ struct mg_connection* pl2 = NULL; // player2
 
 // H A N D L E R S
 
-//void check_conns() {
-//	if (pl2 && !is_conn_alive(pl2)) {
-//		pl1 = pl2;
-//		pl2 = NULL;
-//		printf("WS: Player 2 disconnected\n");
-//		// TODO: Send fail to spectators
-//	}
-//	if (pl1 && !is_conn_alive(pl1)) {
-//		pl1 = NULL;
-//		printf("WS: Player 1 disconnected\n");
-//		// TODO: Send fail to spectators
-//	}
-//}
-
 void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm) {
 	//check_conns();
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
