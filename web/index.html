@@ -76,14 +76,10 @@
 		</div>
 	</div>
 	<script>
-		// W E B S O C K E T S
-		const ws = new WebSocket(`ws://${location.host}/ws`);
-		ws.onopen = () => { console.log('WS: open'); };
-		ws.onmessage = (event) => {
-			console.log(`WS: '${event.data}'`);
-    };
 		// E L E M E N T S
 		const boardElement = document.getElementById('board');
+		const statusElement = document.getElementById('status');
+		// F U N C
 		function markCell(e, t) {
 			sign = ' xo'[t];
 			e.target.textContent = sign.toUpperCase();
@@ -95,6 +91,22 @@
 				ws.send(e.target.id.replace('cell', ''))
 			}
 		});
+		// W E B S O C K E T S
+		const ws = new WebSocket(`ws://${location.host}/ws`);
+		ws.onopen = () => { console.log('WS: open'); };
+		ws.onmessage = (event) => {
+			console.log(`WS: '${event.data}'`);
+			switch(event.data[0]) {
+				case 's':
+					break;
+				case 'x':
+				case 'o':
+					statusElement.textContent = `${event.data[0].toUpperCase()}'s turn...`;
+					break;
+				default:
+					break;
+			}
+    };
 	</script>
 </body>
 </html>
