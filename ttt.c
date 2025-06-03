@@ -4,7 +4,9 @@
 
 struct mg_connection* pl1 = NULL; // player1
 struct mg_connection* pl2 = NULL; // player2
-char board[11] = "b000000000";
+#define BOARD_SIZE 11
+char board[BOARD_SIZE] = "b000000000";
+int turn = -1; // -1 - if game is stopped
 
 // H A N D L E R S
 
@@ -42,7 +44,7 @@ void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm)
 				printf("WS: Game started\n");
 				send_all(c->mgr, "s", 1);
 				send_all(c->mgr, "x", 1);
-				send_all(c->mgr, "b020012100", 10);
+				turn = 0;
 			}
 		}
 		return;
@@ -59,6 +61,22 @@ char poll_check_conn(struct mg_connection* c) {
 	return !c->is_closing && !c->is_draining;
 }
 
+// Indexes begin from 1, 0 - error
+int get_board_index(char ch) {
+	return (ch >= '0' && ch <= '8') ? ch-'0'+1 : 0;
+}
+
+// -1, 0, 1, 2 - error, good, Xs won, Os won
+char board_put(int i, char p) {
+	if (turn%2 != p-1)
+		return -1;
+	if (board[i] != '0')
+		return -1;
+	board[i] = p+'0';
+	turn++;
+	return 0;
+}
+
 void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 	switch (ev) {
 		case MG_EV_HTTP_MSG:
@@ -68,18 +86,31 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 		case MG_EV_WS_MSG:
 			struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
 			printf("WS: '%.*s'\n", (int)wm->data.len, wm->data.buf);
-			mg_ws_send(c, wm->data.buf, wm->data.len, WEBSOCKET_OP_TEXT);
+			if (wm->data.len == 0)
+				return;
+			if (c != pl1 && c != pl2)
+				return;
+			char i = get_board_index(wm->data.buf[0]);
+			char p = (c == pl1 ? 1 : 2);
+			char result = board_put(i, p);
+			if (result == -1) {
+				printf("Illegal move from player %d\n", p);
+				return;
+			}
+			send_all(c->mgr, board, BOARD_SIZE);
 			break;
 		case MG_EV_POLL:
 			if (pl1 && !poll_check_conn(pl1)) {
 				pl1 = NULL;
 				printf("WS: Player 1 disconnected\n");
 				send_all(c->mgr, "c", 1);
+				turn = -1;
 			}
 			if (pl2 && !poll_check_conn(pl2)) {
 				pl2 = NULL;
 				printf("WS: Player 2 disconnected\n");
 				send_all(c->mgr, "c", 1);
+				turn = -1;
 			}
 			if (pl2 && !pl1) {
 				pl1 = pl2;
