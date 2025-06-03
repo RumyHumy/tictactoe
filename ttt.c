@@ -93,6 +93,11 @@ char board_put(int i, char p) {
 	return 0;
 }
 
+void board_clear() {
+	for (int i = 1; i < 10; i++)
+		board[i] = '0';
+}
+
 void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 	switch (ev) {
 		case MG_EV_HTTP_MSG:
@@ -117,6 +122,7 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 			send_all(c->mgr, board, BOARD_SIZE);
 			if (result == p) {
 				send_all(c->mgr, (p == 1 ? "X" : "O"), 1);
+				board_clear();
 				turn = -1;
 				return;
 			}
@@ -125,12 +131,14 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 			if (pl1 && !poll_check_conn(pl1)) {
 				pl1 = NULL;
 				printf("WS: Player 1 disconnected\n");
+				board_clear();
 				send_all(c->mgr, "c", 1);
 				turn = -1;
 			}
 			if (pl2 && !poll_check_conn(pl2)) {
 				pl2 = NULL;
 				printf("WS: Player 2 disconnected\n");
+				board_clear();
 				send_all(c->mgr, "c", 1);
 				turn = -1;
 			}
