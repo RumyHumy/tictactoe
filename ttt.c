@@ -16,9 +16,11 @@ int w_index[8][3] = {
 // H A N D L E R S
 
 // Messages from server:
-
+// Statusbar change:
 // 's' - game started
 // 'w' - waiting for players
+// 'd' - player disconnected
+// Logic:
 // 'c' - clear board 
 // 'x'/'o' - who's turn
 // 'X'/'O' - somebody won
@@ -37,6 +39,7 @@ void send_all(struct mg_mgr *mgr, char* buf, size_t len) {
 void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm) {
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
 		mg_ws_upgrade(c, hm, NULL);
+		// Players connecting
 		if (pl1 == NULL) {
 			pl1 = c;
 			printf("WS: Player 1 connected\n");
@@ -53,18 +56,15 @@ void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm)
 				turn = 0;
 			}
 		}
+		// For spectators
+		if (turn != -1) {
+			send_all(c->mgr, board, BOARD_SIZE);
+			send_all(c->mgr, (turn%2 ? "o" : "x"), 1);
+		}
 		return;
 	}
 	struct mg_http_serve_opts opts = { .root_dir = "./web" };
 	mg_http_serve_dir(c, hm, &opts);
-}
-
-char poll_check_conn(struct mg_connection* c) {
-	if (c == NULL)
-		return 0;
-	if (!c->is_websocket)
-		return 0;
-	return !c->is_closing && !c->is_draining;
 }
 
 // Indexes begin from 1, 0 - error
@@ -118,7 +118,7 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 				printf("Illegal move from player %d\n", p);
 				return;
 			}
-			send_all(c->mgr, (p == 1 ? "o" : "x"), 1);
+			send_all(c->mgr, (turn%2 ? "o" : "x"), 1);
 			send_all(c->mgr, board, BOARD_SIZE);
 			if (result == p) {
 				send_all(c->mgr, (p == 1 ? "X" : "O"), 1);
@@ -127,19 +127,21 @@ void ev_handler(struct mg_connection* c, int ev, void* ev_data) {
 				return;
 			}
 			break;
-		case MG_EV_POLL:
-			if (pl1 && !poll_check_conn(pl1)) {
+		case MG_EV_CLOSE:
+			if (c == pl1) {
 				pl1 = NULL;
 				printf("WS: Player 1 disconnected\n");
 				board_clear();
 				send_all(c->mgr, "c", 1);
+				send_all(c->mgr, "d", 1);
 				turn = -1;
 			}
-			if (pl2 && !poll_check_conn(pl2)) {
+			if (c == pl2) {
 				pl2 = NULL;
 				printf("WS: Player 2 disconnected\n");
 				board_clear();
 				send_all(c->mgr, "c", 1);
+				send_all(c->mgr, "d", 1);
 				turn = -1;
 			}
 			if (pl2 && !pl1) {
