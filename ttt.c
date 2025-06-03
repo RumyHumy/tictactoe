@@ -4,6 +4,7 @@
 
 struct mg_connection* pl1 = NULL; // player1
 struct mg_connection* pl2 = NULL; // player2
+char board[11] = "b000000000";
 
 // H A N D L E R S
 
@@ -14,6 +15,7 @@ struct mg_connection* pl2 = NULL; // player2
 // 'c' - clear board 
 // 'x'/'o' - who's turn
 // 'X'/'O' - somebody won
+// 'b100020000' - board update
 
 void send_all(struct mg_mgr *mgr, char* buf, size_t len) {
 	printf("Sending all: '%.*s'\n", len, buf);
@@ -40,6 +42,7 @@ void ev_handle_http(struct mg_connection* c, int ev, struct mg_http_message* hm)
 				printf("WS: Game started\n");
 				send_all(c->mgr, "s", 1);
 				send_all(c->mgr, "x", 1);
+				send_all(c->mgr, "b020012100", 10);
 			}
 		}
 		return;
